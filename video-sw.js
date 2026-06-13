@@ -1,5 +1,6 @@
 const VIDEO_PATH = '/to-hun-stream.mp4';
 const VIDEO_TYPE = 'video/mp4';
+const OPEN_RANGE_SIZE = 4 * 1024 * 1024;
 const PARTS = [
   { url: 'video-parts/to-hun.mp4.part01', size: 94371840 },
   { url: 'video-parts/to-hun.mp4.part02', size: 94371840 },
@@ -82,7 +83,7 @@ function parseRange(header) {
     start = Math.max(0, TOTAL_SIZE - suffixLength);
     end = TOTAL_SIZE - 1;
   } else {
-    end = end === null ? TOTAL_SIZE - 1 : Math.min(end, TOTAL_SIZE - 1);
+    end = end === null ? Math.min(start + OPEN_RANGE_SIZE - 1, TOTAL_SIZE - 1) : Math.min(end, TOTAL_SIZE - 1);
   }
 
   if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= TOTAL_SIZE) {
