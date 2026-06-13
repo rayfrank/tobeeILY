@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For You</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pink: #ff5fa8;
+      --rose: #ff9cc9;
+      --gold: #f5a828;
+      --amber: #e8702a;
+      --lilac: #d9b7ff;
+      --pearl: #fff7fb;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      color: var(--pearl);
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(
+        to bottom,
+        #03040e 0%,
+        #080920 7%,
+        #0e0c32 14%,
+        #1c0d42 22%,
+        #320d55 30%,
+        #641260 38%,
+        #a01858 46%,
+        #d43028 53%,
+        #ee6818 59%,
+        #f59e20 63%,
+        #f5c030 66%,
+        #f59e20 69%,
+        #e06018 74%,
+        #b02835 81%,
+        #5a1030 89%,
+        #100610 100%
+      );
+    }
+
+    #three-scene {
+      position: fixed;
+      inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    /* Warm horizon glow overlay */
+    .aurora {
+      position: fixed;
+      inset: -15vh -10vw;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 22% at 50% 66%, rgba(245,160,32,0.24) 0%, transparent 100%),
+        radial-gradient(ellipse 55% 18% at 32% 72%, rgba(255,95,168,0.14) 0%, transparent 100%),
+        radial-gradient(ellipse 55% 18% at 68% 72%, rgba(141,92,255,0.12) 0%, transparent 100%);
+      filter: blur(26px);
+      opacity: 0.9;
+      animation: auroraDrift 11s ease-in-out infinite alternate;
+    }
+
+    .veil {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(3,4,14,0.48), transparent 22%, transparent 78%, rgba(4,0,10,0.58)),
+        radial-gradient(ellipse at center, transparent 38%, rgba(3,0,12,0.68) 100%);
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(5px, 1.2vh, 10px);
+      padding: clamp(8px, 1.4vw, 16px);
+    }
+
+    /* Title */
+    .whisper {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 18px);
+      margin: 0;
+    }
+    .whisper p {
+      margin: 0;
+      color: rgba(255,247,251,0.94);
+      font-family: "Dancing Script", cursive;
+      font-size: clamp(1.3rem, 3.4vw, 2.4rem);
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(245,168,40,0.75), 0 0 44px rgba(255,95,168,0.45);
+      white-space: nowrap;
+    }
+    .thread {
+      width: clamp(40px, 10vw, 120px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(245,168,40,0.8), rgba(255,156,201,0.7), transparent);
+    }
+
+    /* Message card */
+    .msg-card {
+      max-width: min(520px, calc(100vw - 32px));
+      width: 100%;
+      padding: clamp(10px, 1.6vw, 16px) clamp(16px, 2.4vw, 26px);
+      border-radius: 16px;
+      text-align: center;
+      background: linear-gradient(135deg,
+        rgba(255,247,251,0.055) 0%,
+        rgba(245,168,40,0.045) 50%,
+        rgba(255,95,168,0.055) 100%
+      );
+      border: 1px solid rgba(245,168,40,0.24);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
+    .msg-greeting {
+      font-family: "Dancing Script", cursive;
+      font-size: clamp(1rem, 2.6vw, 1.4rem);
+      color: var(--gold);
+      text-shadow: 0 0 16px rgba(245,168,40,0.55);
+      margin: 0 0 6px;
+    }
+    .msg-body {
+      font-size: clamp(0.8rem, 1.55vw, 0.92rem);
+      color: rgba(255,247,251,0.85);
+      line-height: 1.7;
+      margin: 0 0 8px;
+    }
+    .msg-cta {
+      font-family: "Dancing Script", cursive;
+      font-size: clamp(0.88rem, 2.1vw, 1.1rem);
+      color: var(--rose);
+      text-shadow: 0 0 14px rgba(255,156,201,0.5);
+      margin: 0;
+    }
+
+    /* Theater / video */
+    .theater {
+      position: relative;
+      width: min(calc(100vw - 28px), 800px);
+      max-width: 100%;
+      isolation: isolate;
+      display: grid;
+      justify-items: center;
+    }
+
+    .halo {
+      position: absolute;
+      inset: clamp(-30px, -4vw, -15px);
+      border-radius: 34px;
+      pointer-events: none;
+      z-index: -2;
+    }
+    .halo.one {
+      border: 1px solid rgba(245,168,40,0.35);
+      transform: rotate(-2deg);
+      animation: haloFloat 7s ease-in-out infinite;
+    }
+    .halo.two {
+      inset: clamp(-50px, -6.5vw, -26px);
+      border: 1px solid rgba(255,156,201,0.22);
+      transform: rotate(3deg);
+      animation: haloFloat 8s ease-in-out -2s infinite reverse;
+    }
+
+    .petal-ring {
+      position: absolute;
+      inset: -50px;
+      z-index: -1;
+      pointer-events: none;
+      animation: ringBreath 6s ease-in-out infinite;
+    }
+    .petal-ring span {
+      position: absolute;
+      width: clamp(8px, 1.1vw, 13px);
+      height: clamp(20px, 2.8vw, 34px);
+      left: 50%; top: 50%;
+      border-radius: 999px 999px 999px 0;
+      background: linear-gradient(165deg, rgba(255,247,251,0.95), rgba(245,168,40,0.85) 48%, rgba(255,95,168,0.65));
+      box-shadow: 0 0 16px rgba(245,168,40,0.52);
+      transform:
+        rotate(calc(var(--i) * 18deg))
+        translateY(calc(-1 * min(32vw, 318px)))
+        rotate(42deg);
+      opacity: 0.7;
+    }
+
+    .video-frame {
+      position: relative;
+      width: min(100%, 900px);
+      max-width: 100%;
+      padding: clamp(5px, 0.7vw, 8px);
+      border-radius: clamp(16px, 2.8vw, 28px);
+      background: linear-gradient(135deg,
+        rgba(255,255,255,0.92),
+        rgba(245,168,40,0.96) 20%,
+        rgba(255,156,201,0.97) 44%,
+        rgba(245,200,60,0.82) 57%,
+        rgba(255,95,168,0.96) 78%,
+        rgba(217,183,255,0.92)
+      );
+      background-size: 250% 250%;
+      box-shadow:
+        0 18px 52px rgba(4,0,10,0.65),
+        0 0 44px rgba(245,168,40,0.42),
+        0 0 90px rgba(255,95,168,0.3),
+        inset 0 0 22px rgba(255,255,255,0.3);
+      animation: borderFlow 9s ease infinite;
+    }
+    .video-frame::before {
+      content: "";
+      position: absolute;
+      inset: -20px;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: -1;
+      background: radial-gradient(ellipse at 50% 50%, rgba(245,168,40,0.22), transparent 70%);
+      filter: blur(18px);
+    }
+    .video-frame::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: clamp(12px, 2.2vw, 22px);
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .media {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      border-radius: clamp(12px, 2.2vw, 22px);
+      background: #07000d;
+    }
+    .media::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.16) 45%, transparent 60%);
+      transform: translateX(-125%);
+      animation: glassSweep 6.5s ease-in-out 2s infinite;
+    }
+
+    video {
+      width: 100%; height: 100%;
+      display: block;
+      object-fit: contain;
+      background: #07000d;
+    }
+
+    .play-orb {
+      position: absolute;
+      inset: 0; z-index: 5;
+      display: grid; place-items: center;
+      width: 100%; height: 100%;
+      border: 0; padding: 0;
+      color: var(--pearl);
+      background:
+        linear-gradient(180deg, rgba(8,0,14,0.22), rgba(8,0,14,0.48)),
+        radial-gradient(circle at center, rgba(245,168,40,0.16), transparent 42%);
+      cursor: pointer;
+      transition: opacity 280ms ease, visibility 280ms ease;
+    }
+    .play-orb span {
+      width: clamp(70px, 12vw, 116px);
+      height: clamp(70px, 12vw, 116px);
+      display: grid; place-items: center;
+      border-radius: 50%;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.26), rgba(245,168,40,0.14)),
+        rgba(255,247,251,0.1);
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow:
+        0 0 28px rgba(245,168,40,0.58),
+        0 0 60px rgba(255,95,168,0.42),
+        inset 0 0 18px rgba(255,255,255,0.18);
+      backdrop-filter: blur(12px);
+      animation: playPulse 2.8s ease-in-out infinite;
+    }
+    .play-orb span::before {
+      content: "";
+      width: 0; height: 0;
+      margin-left: 8%;
+      border-top: clamp(14px, 2.4vw, 23px) solid transparent;
+      border-bottom: clamp(14px, 2.4vw, 23px) solid transparent;
+      border-left: clamp(22px, 3.6vw, 36px) solid var(--pearl);
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.72));
+    }
+
+    body.video-started .play-orb { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .dust {
+      position: fixed;
+      left: var(--x); bottom: -8vh;
+      z-index: 4;
+      width: var(--s); height: var(--s);
+      pointer-events: none;
+      border-radius: 50%;
+      background: var(--c);
+      box-shadow: 0 0 14px var(--c);
+      opacity: 0;
+      animation: dustRise var(--d) linear var(--delay) infinite;
+    }
+
+    body.video-live .video-frame {
+      animation-duration: 3.8s;
+      box-shadow:
+        0 18px 52px rgba(4,0,10,0.65),
+        0 0 65px rgba(245,168,40,0.58),
+        0 0 125px rgba(255,95,168,0.44),
+        inset 0 0 28px rgba(255,255,255,0.4);
+    }
+    body.video-live .aurora { opacity: 1; animation-duration: 5s; }
+
+    @keyframes auroraDrift {
+      0%  { transform: translate3d(-2vw,-1vh,0) rotate(-1deg); }
+      100%{ transform: translate3d(2vw,1.5vh,0) rotate(1.5deg); }
+    }
+    @keyframes borderFlow {
+      0%,100%{ background-position: 0% 50%; }
+      50%    { background-position: 100% 50%; }
+    }
+    @keyframes glassSweep {
+      0%,34%  { transform: translateX(-125%); }
+      56%,100%{ transform: translateX(125%); }
+    }
+    @keyframes haloFloat {
+      0%,100%{ transform: translateY(0) rotate(-2deg); }
+      50%    { transform: translateY(-8px) rotate(2deg); }
+    }
+    @keyframes ringBreath {
+      0%,100%{ transform: scale(0.98) rotate(-1deg); opacity: 0.75; }
+      50%    { transform: scale(1.02) rotate(1deg); opacity: 1; }
+    }
+    @keyframes playPulse {
+      0%,100%{ transform: scale(1); }
+      50%    { transform: scale(1.07); }
+    }
+    @keyframes dustRise {
+      0%  { transform: translate3d(0,0,0) scale(0.6) rotate(0deg); opacity: 0; }
+      12% { opacity: 0.78; }
+      88% { opacity: 0.55; }
+      100%{ transform: translate3d(var(--drift),-115vh,0) scale(1.1) rotate(180deg); opacity: 0; }
+    }
+
+    @media (max-width: 700px) {
+      .page-shell { padding: 12px 10px; gap: 8px; }
+      .theater { width: calc(100vw - 24px); }
+      .petal-ring { inset: -20px; }
+      .petal-ring span {
+        transform: rotate(calc(var(--i)*18deg)) translateY(calc(-1 * min(38vw,180px))) rotate(42deg);
+      }
+    }
+    @media (max-height: 640px) {
+      .msg-card { display: none; }
+      .page-shell { gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="three-scene" aria-hidden="true"></canvas>
+<div class="aurora" aria-hidden="true"></div>
+<div class="veil" aria-hidden="true"></div>
+
+<main class="page-shell">
+
+  <header class="whisper" aria-label="title">
+    <span class="thread" aria-hidden="true"></span>
+    <p>For Hun</p>
+    <span class="thread" aria-hidden="true"></span>
+  </header>
+
+  <!-- ✏️ Edit the message below -->
+  <div class="msg-card" role="note">
+    <p class="msg-greeting">hey, Bee —</p>
+    <p class="msg-body">
+      there's something i've been holding onto.<br>
+      couldn't find the right words,<br>
+      so i found something better.
+    </p>
+    <p class="msg-cta">watch the video when you're ready &nbsp;♡</p>
+  </div>
+
+  <section class="theater" aria-label="video">
+    <div class="halo one" aria-hidden="true"></div>
+    <div class="halo two" aria-hidden="true"></div>
+    <div class="petal-ring" id="petal-ring" aria-hidden="true"></div>
+
+    <div class="video-frame">
+      <div class="media">
+        <video id="main-video" controls playsinline preload="metadata">
+          <source src="to hun.mp4" type="video/mp4">
+        </video>
+        <button class="play-orb" id="play-orb" type="button" aria-label="Play video">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ── UI wiring ─────────────────────────────────────────────── */
+  const video   = document.getElementById('main-video');
+  const playOrb = document.getElementById('play-orb');
+  const ring    = document.getElementById('petal-ring');
+  const source  = video.querySelector('source');
+  const hosted  = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+
+  if (hosted && 'serviceWorker' in navigator) {
+    playOrb.disabled = true;
+    function useStreamedVideo() {
+      if (source) source.remove();
+      if (!video.src || !video.src.endsWith('/to-hun-stream.mp4')) {
+        video.src = 'to-hun-stream.mp4';
+        video.load();
+      }
+      playOrb.disabled = false;
+    }
+
+    navigator.serviceWorker.addEventListener('controllerchange', useStreamedVideo, { once: true });
+    navigator.serviceWorker.register('./video-sw.js')
+      .then(function () { return navigator.serviceWorker.ready; })
+      .then(function () {
+        if (navigator.serviceWorker.controller) {
+          useStreamedVideo();
+        }
+      })
+      .catch(function () {
+        playOrb.disabled = false;
+      });
+  }
+
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('span');
+    p.style.setProperty('--i', i);
+    ring.appendChild(p);
+  }
+
+  const dustColors = ['#ff9d6a','#ffb347','#ff6b9d','#ffd166','#ffb3d1','#f5a020','#ffc870'];
+  for (let i = 0; i < 40; i++) {
+    const d = document.createElement('span');
+    d.className = 'dust';
+    d.style.setProperty('--x',     Math.random() * 100 + 'vw');
+    d.style.setProperty('--s',     (Math.random() * 5 + 3) + 'px');
+    d.style.setProperty('--d',     (Math.random() * 9 + 10) + 's');
+    d.style.setProperty('--delay', (Math.random() * -22) + 's');
+    d.style.setProperty('--drift', ((Math.random() - 0.5) * 36) + 'vw');
+    d.style.setProperty('--c', dustColors[Math.floor(Math.random() * dustColors.length)]);
+    document.body.appendChild(d);
+  }
+
+  playOrb.addEventListener('click', function () {
+    document.body.classList.add('video-started');
+    const p = video.play();
+    if (p && p.catch) p.catch(function () { document.body.classList.remove('video-started'); });
+  });
+  video.addEventListener('play',  function () { document.body.classList.add('video-started', 'video-live'); });
+  video.addEventListener('pause', function () { document.body.classList.remove('video-live'); });
+  video.addEventListener('ended', function () { document.body.classList.remove('video-live'); });
+
+  if (!window.THREE) return;
+
+  /* ── Renderer ──────────────────────────────────────────────── */
+  const canvas   = document.getElementById('three-scene');
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 250);
+  camera.position.set(0, 0, 60);
+
+  /* ── Lights ────────────────────────────────────────────────── */
+  scene.add(new THREE.AmbientLight(0xffe4cc, 0.55));
+
+  const sunLight   = new THREE.PointLight(0xffaa30, 3.2, 160);
+  sunLight.position.set(0, -14, -35);
+  scene.add(sunLight);
+
+  const pinkLight  = new THREE.PointLight(0xff5fa8, 1.8, 120);
+  pinkLight.position.set(-26, 12, 28);
+  scene.add(pinkLight);
+
+  const lilacLight = new THREE.PointLight(0xd9b7ff, 1.2, 100);
+  lilacLight.position.set(26, 18, 28);
+  scene.add(lilacLight);
+
+  /* ── Sun ───────────────────────────────────────────────────── */
+  var SUN_Y = -14, SUN_Z = -50;
+
+  // Core disc — closer, larger, bright white-gold
+  var sunCore = new THREE.Mesh(
+    new THREE.SphereGeometry(10, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xfffde8 })
+  );
+  sunCore.position.set(0, SUN_Y, SUN_Z);
+  scene.add(sunCore);
+
+  // Atmospheric halos — much more opaque
+  var haloData = [
+    { r: 1.6, color: 0xffd166, op: 0.55 },
+    { r: 2.6, color: 0xff9800, op: 0.30 },
+    { r: 4.0, color: 0xff6030, op: 0.14 },
+    { r: 6.0, color: 0xff3020, op: 0.07 }
+  ];
+  haloData.forEach(function (h) {
+    var m = new THREE.Mesh(
+      new THREE.SphereGeometry(6 * h.r, 24, 24),
+      new THREE.MeshBasicMaterial({
+        color: h.color,
+        transparent: true,
+        opacity: h.op,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    m.position.set(0, SUN_Y, SUN_Z);
+    scene.add(m);
+  });
+
+  // Light rays
+  var raysGroup = new THREE.Group();
+  raysGroup.position.set(0, SUN_Y, SUN_Z + 2);
+  for (var ri = 0; ri < 20; ri++) {
+    var angle = (ri / 20) * Math.PI * 2;
+    var len   = 20 + Math.random() * 30;
+    var rShape = new THREE.Shape();
+    rShape.moveTo(-0.5, 0);
+    rShape.lineTo(0.5, 0);
+    rShape.lineTo(0.12, len);
+    rShape.lineTo(-0.12, len);
+    rShape.closePath();
+    var ray = new THREE.Mesh(
+      new THREE.ShapeGeometry(rShape),
+      new THREE.MeshBasicMaterial({
+        color: 0xffaa30,
+        transparent: true,
+        opacity: 0.05 + Math.random() * 0.07,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      })
+    );
+    ray.rotation.z = angle;
+    raysGroup.add(ray);
+  }
+  scene.add(raysGroup);
+
+  // Horizon glow band
+  var glowBand = new THREE.Mesh(
+    new THREE.PlaneGeometry(240, 28),
+    new THREE.MeshBasicMaterial({
+      color: 0xff8c30,
+      transparent: true,
+      opacity: 0.18,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  glowBand.position.set(0, SUN_Y - 1, SUN_Z + 4);
+  scene.add(glowBand);
+
+  /* ── Clouds ────────────────────────────────────────────────── */
+  function makeCloud(x, y, z, sc, color, opacity) {
+    var g = new THREE.Group();
+    var blobs = [
+      [0, 0, 0, 1],
+      [-2.8, -0.5, 0.3, 0.78],
+      [2.8, -0.4, 0.3, 0.74],
+      [-1.3, 0.7, -0.2, 0.62],
+      [1.4, 0.65, -0.2, 0.58]
+    ];
+    blobs.forEach(function (b) {
+      var mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(2.2 * b[3], 8, 6),
+        new THREE.MeshBasicMaterial({
+          color: color,
+          transparent: true,
+          opacity: opacity * b[3],
+          depthWrite: false
+        })
+      );
+      mesh.position.set(b[0], b[1], b[2]);
+      g.add(mesh);
+    });
+    g.position.set(x, y, z);
+    g.scale.set(sc, sc * 0.42, sc * 0.38);
+    return g;
+  }
+
+  scene.add(makeCloud(-36, -8,  -52, 5,   0xff9db8, 0.16));
+  scene.add(makeCloud( 32, -6,  -58, 6,   0xffb5c8, 0.13));
+  scene.add(makeCloud(-14, -7,  -48, 3.8, 0xffa8c0, 0.18));
+  scene.add(makeCloud( 50, -9,  -55, 4.5, 0xff9db8, 0.12));
+  scene.add(makeCloud(-55, -7,  -60, 5.5, 0xffacc8, 0.14));
+  scene.add(makeCloud( 14, -5,  -70, 7,   0xffb8d0, 0.10));
+
+  /* ── Hills silhouette ──────────────────────────────────────── */
+  var hillShape = new THREE.Shape();
+  hillShape.moveTo(-120, 0);
+  hillShape.lineTo(-90, 7);
+  hillShape.lineTo(-72, 3);
+  hillShape.lineTo(-55, 11);
+  hillShape.lineTo(-38, 5);
+  hillShape.lineTo(-20, 8);
+  hillShape.lineTo(-8,  4);
+  hillShape.lineTo(0,   7);
+  hillShape.lineTo(12,  3);
+  hillShape.lineTo(30,  10);
+  hillShape.lineTo(46,  5);
+  hillShape.lineTo(64,  9);
+  hillShape.lineTo(80,  4);
+  hillShape.lineTo(100, 7);
+  hillShape.lineTo(120, 2);
+  hillShape.lineTo(120, -20);
+  hillShape.lineTo(-120, -20);
+  hillShape.closePath();
+
+  var hills = new THREE.Mesh(
+    new THREE.ShapeGeometry(hillShape),
+    new THREE.MeshBasicMaterial({ color: 0x020008 })
+  );
+  hills.position.set(0, -24, -18);
+  scene.add(hills);
+
+  /* ── Hearts ────────────────────────────────────────────────── */
+  function buildHeartShape() {
+    var s = new THREE.Shape();
+    s.moveTo(0, 2.8);
+    s.bezierCurveTo(0, 2.8, -4.2, 0.2, -4.2, -2.7);
+    s.bezierCurveTo(-4.2, -5.1, -1.8, -6.5, 0, -4.2);
+    s.bezierCurveTo(1.8, -6.5, 4.2, -5.1, 4.2, -2.7);
+    s.bezierCurveTo(4.2, 0.2, 0, 2.8, 0, 2.8);
+    return s;
+  }
+
+  var heartShape = buildHeartShape();
+  var heartOpts  = { depth: 0.7, bevelEnabled: true, bevelSegments: 4, steps: 1, bevelSize: 0.2, bevelThickness: 0.2 };
+  var warmPal    = [0xff5fa8, 0xff9cc9, 0xffd166, 0xf5a020, 0xffb347, 0xd9b7ff, 0xff8fa8, 0xffcc70];
+
+  var orbitGroup = new THREE.Group();
+  var driftGroup = new THREE.Group();
+  scene.add(orbitGroup, driftGroup);
+
+  for (var oi = 0; oi < 24; oi++) {
+    var oAngle = (oi / 24) * Math.PI * 2;
+    var oGeo   = new THREE.ExtrudeGeometry(heartShape, heartOpts);
+    oGeo.center();
+    var oMat = new THREE.MeshPhongMaterial({
+      color: warmPal[oi % warmPal.length],
+      shininess: 100, specular: 0xffffff,
+      transparent: true, opacity: 0.52
+    });
+    var oH = new THREE.Mesh(oGeo, oMat);
+    var xR = 40 + Math.sin(oAngle * 3) * 3;
+    var yR = 22 + Math.cos(oAngle * 2) * 2;
+    oH.position.set(Math.cos(oAngle) * xR, Math.sin(oAngle) * yR, -8 + Math.sin(oAngle * 2) * 7);
+    oH.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, oAngle);
+    oH.scale.setScalar(0.24 + (oi % 5) * 0.03);
+    oH.userData = { spin: 0.003 + Math.random() * 0.005 };
+    orbitGroup.add(oH);
+  }
+
+  for (var di = 0; di < 34; di++) {
+    var dGeo = new THREE.ExtrudeGeometry(heartShape, heartOpts);
+    dGeo.center();
+    var dMat = new THREE.MeshPhongMaterial({
+      color: warmPal[Math.floor(Math.random() * warmPal.length)],
+      shininess: 80, specular: 0xffffff,
+      transparent: true, opacity: 0.18 + Math.random() * 0.28
+    });
+    var dH = new THREE.Mesh(dGeo, dMat);
+    var dx = (Math.random() - 0.5) * 110;
+    var dy = (Math.random() - 0.5) * 70;
+    if (Math.abs(dx) < 28 && Math.abs(dy) < 16) {
+      dx += dx < 0 ? -28 : 28;
+      dy += dy < 0 ? -16 : 16;
+    }
+    dH.position.set(dx, dy, -38 + Math.random() * 22);
+    dH.rotation.set(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2);
+    dH.scale.setScalar(0.1 + Math.random() * 0.22);
+    dH.userData = {
+      rise: 0.008 + Math.random() * 0.02,
+      sway: (Math.random() - 0.5) * 0.009,
+      spin: (Math.random() - 0.5) * 0.007
+    };
+    driftGroup.add(dH);
+  }
+
+  /* ── Stars (top half only — sky) ───────────────────────────── */
+  var STAR_N = 800;
+  var sPos   = new Float32Array(STAR_N * 3);
+  var sCol   = new Float32Array(STAR_N * 3);
+  for (var si = 0; si < STAR_N; si++) {
+    sPos[si*3]   = (Math.random() - 0.5) * 130;
+    sPos[si*3+1] = 8 + Math.random() * 55;
+    sPos[si*3+2] = -55 + Math.random() * 40;
+    var b = 0.55 + Math.random() * 0.45;
+    sCol[si*3] = b; sCol[si*3+1] = b * 0.88; sCol[si*3+2] = b;
+  }
+  var starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+  starGeo.setAttribute('color',    new THREE.BufferAttribute(sCol, 3));
+  var starField = new THREE.Points(starGeo, new THREE.PointsMaterial({
+    size: 0.22, vertexColors: true,
+    transparent: true, opacity: 0.5, sizeAttenuation: true
+  }));
+  scene.add(starField);
+
+  /* ── Resize / pointer ──────────────────────────────────────── */
+  var W = 1, H = 1, mx = 0, my = 0;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H;
+    camera.updateProjectionMatrix();
+  }
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('pointermove', function (e) {
+    mx = (e.clientX / W - 0.5) * 2;
+    my = (e.clientY / H - 0.5) * 2;
+  });
+  resize();
+
+  /* ── Render loop ───────────────────────────────────────────── */
+  var pulse = 0;
+  function tick(time) {
+    var t    = time * 0.001;
+    var live = document.body.classList.contains('video-live');
+    pulse += ((live ? 1 : 0) - pulse) * 0.04;
+
+    orbitGroup.rotation.z = Math.sin(t * 0.18) * 0.08 + t * (0.022 + pulse * 0.05);
+    orbitGroup.rotation.y = Math.sin(t * 0.22) * 0.1;
+    orbitGroup.children.forEach(function (h, i) {
+      h.rotation.x += h.userData.spin * (1 + pulse * 1.8);
+      h.rotation.y += h.userData.spin * 0.65;
+      h.position.z  = -8 + Math.sin(t * 0.8 + i) * (4 + pulse * 3.5);
+    });
+
+    driftGroup.children.forEach(function (h) {
+      h.position.y += h.userData.rise * (1 + pulse * 1.5);
+      h.position.x += h.userData.sway;
+      h.rotation.z += h.userData.spin;
+      if (h.position.y >  44) h.position.y = -44;
+      if (h.position.x >  64) h.position.x = -64;
+      if (h.position.x < -64) h.position.x =  64;
+    });
+
+    raysGroup.rotation.z = t * 0.04;
+
+    sunLight.intensity   = 3.0 + Math.sin(t * 0.9)        * 0.5  + pulse * 1.2;
+    pinkLight.intensity  = 1.7 + Math.sin(t * 1.2 + 1.0)  * 0.4  + pulse * 0.8;
+    lilacLight.intensity = 1.1 + Math.sin(t * 0.7 + 2.1)  * 0.3  + pulse * 0.4;
+
+    starField.rotation.y = Math.sin(t * 0.06) * 0.04;
+
+    camera.position.x += (mx * 4   - camera.position.x) * 0.024;
+    camera.position.y += (-my * 3  - camera.position.y) * 0.024;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+    window.requestAnimationFrame(tick);
+  }
+  window.requestAnimationFrame(tick);
+
+}());
+</script>
+</body>
+</html>
